@@ -1,5 +1,7 @@
 #pragma once
 #include <type_traits>
+#include <adm/meta/backport/integral.hpp>
+#include <adm/meta/backport/list.hpp>
 
 namespace adm {
   namespace meta {
@@ -77,22 +79,45 @@ namespace adm {
     template <template <class...> class L, class V>
     struct index_of_first_impl<L<>, V> {
       // terminal condition,  emtpy lists
-      using type = std::integral_constant<std::size_t, 0>;
+      using type = mp_size_t<0>;
     };
 
     template <template <class...> class L, class V, class... T>
     struct index_of_first_impl<L<V, T...>, V> {
       // terminal condition, type found
-      using type = std::integral_constant<std::size_t, 0>;
+      using type = mp_size_t<0>;
     };
 
     template <template <class...> class L, class V, class T1, class... T>
     struct index_of_first_impl<L<T1, T...>, V> {
       // increase by 1 until terminal condition was encountered
       template <std::size_t N>
-      using size_type = std::integral_constant<std::size_t, N>;
+      using size_type = mp_size_t<N>;
       using type = size_type<1 + mp_find<L<T...>, V>::value>;
     };
+
+    // ------------------------- //
+    template <typename L, std::size_t N>
+    struct at_impl;
+
+    template <template <class...> class L, class T1, class... T>
+    struct at_impl<L<T1, T...>, 0> {
+      using type = T1;
+    };
+
+    template <template <class...> class L, class T1, class... T, std::size_t N>
+    struct at_impl<L<T1, T...>, N> {
+      using type = typename at_impl<L<T...>, N - 1>::type;
+    };
+
+    template <typename L, typename I>
+    using mp_at = typename at_impl<L, I::value>::type;
+
+    // ------------------------- //
+
+    template <class L, class V>
+    using mp_contains =
+        typename mp_not<std::is_same<mp_size<L>, mp_find<L, V>>>::type;
 
   }  // namespace meta
 }  // namespace adm

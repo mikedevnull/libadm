@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include <adm/meta/backport/integral.hpp>
 
 namespace adm {
 
@@ -126,16 +127,35 @@ namespace adm {
     template <template <class...> class L>
     struct list_size_impl<L<>> {
       // terminal condition,  emtpy lists
-      using type = std::integral_constant<std::size_t, 0>;
+      using type = mp_size_t<0>;
     };
 
     template <template <class...> class L, class T1, class... T>
     struct list_size_impl<L<T1, T...>> {
       // increase by 1 until terminal condition was encountered
       template <std::size_t N>
-      using size_type = std::integral_constant<std::size_t, N>;
+      using size_type = mp_size_t<N>;
       using type = size_type<1 + mp_size<L<T...>>::value>;
     };
+
+    // ------------------------- //
+
+    template <class... L>
+    struct append_impl;
+
+    template <template <class...> class L, class... T1, class... T2>
+    struct append_impl<L<T1...>, L<T2...>> {
+      using type = L<T1..., T2...>;
+    };
+
+    template <template <class...> class L, class... T1, class... T2,
+              class... Tn>
+    struct append_impl<L<T1...>, L<T2...>, Tn...> {
+      using type = typename append_impl<L<T1..., T2...>, Tn...>::type;
+    };
+
+    template <typename L1, typename... L2>
+    using mp_append = typename append_impl<L1, L2...>::type;
 
   }  // namespace meta
 }  // namespace adm

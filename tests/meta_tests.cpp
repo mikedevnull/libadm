@@ -6,6 +6,9 @@
 template <typename T>
 using add_pointer = T*;
 
+template <typename T>
+using is_pointer = typename std::is_pointer<T>::type;
+
 TEST_CASE("static_tests") {
   // this test case succeeds if it compiles.
   using namespace adm;
