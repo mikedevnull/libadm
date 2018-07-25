@@ -13,6 +13,7 @@
 #include "adm/helper/element_range.hpp"
 #include "adm/detail/named_option_helper.hpp"
 #include "adm/detail/named_type.hpp"
+#include "adm/detail/property_store.hpp"
 #include "adm/export.h"
 
 namespace adm {
@@ -40,6 +41,11 @@ namespace adm {
   using MaxDuckingDepth = detail::NamedType<double, MaxDuckingDepthTag,
                                             detail::RangeValidator<-62, 0>>;
 
+  struct AudioProgrammeDefaults {
+    using PropertiesWithDefaults = PropertyList<Start>;
+    static Start create(Start::tag) { return Start{std::chrono::seconds(0)}; }
+  };
+
   /// @brief Tag for AudioProgramme
   struct AudioProgrammeTag {};
   /**
@@ -51,6 +57,15 @@ namespace adm {
    * @headerfile audio_programme.hpp <adm/elements/audio_programme.hpp>
    */
   class AudioProgramme : public std::enable_shared_from_this<AudioProgramme> {
+    using ManditoryProperties =
+        PropertyList<AudioProgrammeId, AudioProgrammeName>;
+    using OptionalProperties =
+        PropertyList<AudioProgrammeLanguage, Start, End, MaxDuckingDepth,
+                     LoudnessMetadata, AudioProgrammeReferenceScreen>;
+    using AudioProgrammePropertyStore =
+        PropertyStore<ManditoryProperties, OptionalProperties,
+                      AudioProgrammeDefaults>;
+
    public:
     typedef AudioProgrammeTag tag;
     /// @brief Type that holds the id for this element;
@@ -86,7 +101,9 @@ namespace adm {
      * before
      */
     template <typename Parameter>
-    Parameter get() const;
+    Parameter get() const {
+      return storage_.get<Parameter>();
+    }
 
     /**
      * @brief ADM parameter has template
@@ -95,7 +112,9 @@ namespace adm {
      * Returns true if the ADM parameter is set or has a default value.
      */
     template <typename Parameter>
-    bool has() const;
+    bool has() const {
+      return storage_.has<Parameter>();
+    }
 
     /**
      * @brief ADM parameter isDefault template
@@ -104,24 +123,16 @@ namespace adm {
      * argument. Returns true if the ADM parameter is the default value.
      */
     template <typename Parameter>
-    bool isDefault() const;
+    bool isDefault() const {
+      return storage_.isDefault<Parameter>();
+    }
 
-    /// @brief AudioProgrammeId setter
+    template <typename Parameter>
+    void set(const Parameter &value) {
+      storage_.set(value);
+    }
+
     ADM_EXPORT void set(AudioProgrammeId id);
-    /// @brief AudioProgrammeName setter
-    ADM_EXPORT void set(AudioProgrammeName name);
-    /// @brief AudioProgrammeLanguage setter
-    ADM_EXPORT void set(AudioProgrammeLanguage language);
-    /// @brief Start setter
-    ADM_EXPORT void set(Start start);
-    /// @brief End setter
-    ADM_EXPORT void set(End end);
-    /// @brief LoudnessMetadata setter
-    ADM_EXPORT void set(LoudnessMetadata loudnessMetadata);
-    /// @brief MaxDuckingDepth setter
-    ADM_EXPORT void set(MaxDuckingDepth depth);
-    /// @brief AudioProgrammeReferenceScreen setter
-    ADM_EXPORT void set(AudioProgrammeReferenceScreen refScreen);
 
     /**
      * @brief ADM parameter unset template
@@ -131,7 +142,9 @@ namespace adm {
      * the default value if there is one.
      */
     template <typename Parameter>
-    void unset();
+    void unset() {
+      storage_.unset<Parameter>();
+    }
 
     /// @brief Add reference to an AudioContent
     ADM_EXPORT bool addReference(std::shared_ptr<AudioContent> content);
@@ -184,47 +197,6 @@ namespace adm {
     ADM_EXPORT AudioProgramme(const AudioProgramme &) = default;
     ADM_EXPORT AudioProgramme(AudioProgramme &&) = default;
 
-    ADM_EXPORT AudioProgrammeId
-        get(detail::ParameterTraits<AudioProgrammeId>::tag) const;
-    ADM_EXPORT AudioProgrammeName
-        get(detail::ParameterTraits<AudioProgrammeName>::tag) const;
-    ADM_EXPORT AudioProgrammeLanguage
-        get(detail::ParameterTraits<AudioProgrammeLanguage>::tag) const;
-    ADM_EXPORT Start get(detail::ParameterTraits<Start>::tag) const;
-    ADM_EXPORT End get(detail::ParameterTraits<End>::tag) const;
-    ADM_EXPORT LoudnessMetadata
-        get(detail::ParameterTraits<LoudnessMetadata>::tag) const;
-    ADM_EXPORT MaxDuckingDepth
-        get(detail::ParameterTraits<MaxDuckingDepth>::tag) const;
-    ADM_EXPORT AudioProgrammeReferenceScreen
-        get(detail::ParameterTraits<AudioProgrammeReferenceScreen>::tag) const;
-
-    ADM_EXPORT bool has(detail::ParameterTraits<AudioProgrammeId>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<AudioProgrammeName>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioProgrammeLanguage>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<Start>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<End>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<LoudnessMetadata>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<MaxDuckingDepth>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioProgrammeReferenceScreen>::tag) const;
-
-    template <typename Tag>
-    bool isDefault(Tag) const {
-      return false;
-    }
-
-    ADM_EXPORT bool isDefault(detail::ParameterTraits<Start>::tag) const;
-
-    ADM_EXPORT void unset(detail::ParameterTraits<AudioProgrammeLanguage>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<Start>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<End>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<LoudnessMetadata>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<MaxDuckingDepth>::tag);
-    ADM_EXPORT void unset(
-        detail::ParameterTraits<AudioProgrammeReferenceScreen>::tag);
-
     ADM_EXPORT ElementRange<const AudioContent> getReferences(
         detail::ParameterTraits<AudioContent>::tag) const;
 
@@ -238,15 +210,9 @@ namespace adm {
     void setParent(std::weak_ptr<Document> document);
 
     std::weak_ptr<Document> parent_;
-    AudioProgrammeId id_;
-    AudioProgrammeName name_;
-    boost::optional<AudioProgrammeLanguage> language_;
-    boost::optional<Start> start_;
-    boost::optional<End> end_;
+
+    AudioProgrammePropertyStore storage_;
     std::vector<std::shared_ptr<AudioContent>> audioContents_;
-    boost::optional<LoudnessMetadata> loudnessMetadata_;
-    boost::optional<MaxDuckingDepth> maxDuckingDepth_;
-    boost::optional<AudioProgrammeReferenceScreen> refScreen_;
   };
   ///@}
 
@@ -260,30 +226,6 @@ namespace adm {
         programme, std::forward<Parameters>(optionalNamedArgs)...);
 
     return programme;
-  }
-
-  template <typename Parameter>
-  Parameter AudioProgramme::get() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return get(Tag());
-  }
-
-  template <typename Parameter>
-  bool AudioProgramme::has() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return has(Tag());
-  }
-
-  template <typename Parameter>
-  bool AudioProgramme::isDefault() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return isDefault(Tag());
-  }
-
-  template <typename Parameter>
-  void AudioProgramme::unset() {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return unset(Tag());
   }
 
   template <typename Element>
