@@ -11,112 +11,47 @@
 namespace adm {
 
   // ---- Getter ---- //
-  AudioContentId AudioContent::get(
-      detail::ParameterTraits<AudioContentId>::tag) const {
-    return id_;
-  }
-  AudioContentName AudioContent::get(
-      detail::ParameterTraits<AudioContentName>::tag) const {
-    return name_;
-  }
-  AudioContentLanguage AudioContent::get(
-      detail::ParameterTraits<AudioContentLanguage>::tag) const {
-    return language_.get();
-  }
-  LoudnessMetadata AudioContent::get(
-      detail::ParameterTraits<LoudnessMetadata>::tag) const {
-    return loudnessMetadata_.get();
-  }
-  DialogueId AudioContent::get(detail::ParameterTraits<DialogueId>::tag) const {
-    return dialogueId_.get();
-  }
-  ContentKind AudioContent::get(
-      detail::ParameterTraits<ContentKind>::tag) const {
+
+  ContentKind AudioContent::get(DispatchTag<ContentKind>) const {
     if (has<NonDialogueContentKind>()) {
-      return ContentKind(nonDialogueContentKind_.get());
+      return ContentKind(storage_.get<NonDialogueContentKind>());
     } else if (has<DialogueContentKind>()) {
-      return ContentKind(dialogueContentKind_.get());
+      return ContentKind(storage_.get<DialogueContentKind>());
     } else {
-      return ContentKind(mixedContentKind_.get());
+      return ContentKind(storage_.get<MixedContentKind>());
     }
   }
-  NonDialogueContentKind AudioContent::get(
-      detail::ParameterTraits<NonDialogueContentKind>::tag) const {
-    return nonDialogueContentKind_.get();
-  }
-  DialogueContentKind AudioContent::get(
-      detail::ParameterTraits<DialogueContentKind>::tag) const {
-    return dialogueContentKind_.get();
-  }
-  MixedContentKind AudioContent::get(
-      detail::ParameterTraits<MixedContentKind>::tag) const {
-    return mixedContentKind_.get();
-  }
 
-  // ---- Has ---- //
-  bool AudioContent::has(detail::ParameterTraits<AudioContentId>::tag) const {
-    return true;
-  }
-  bool AudioContent::has(detail::ParameterTraits<AudioContentName>::tag) const {
-    return true;
-  }
-  bool AudioContent::has(
-      detail::ParameterTraits<AudioContentLanguage>::tag) const {
-    return language_ != boost::none;
-  }
-  bool AudioContent::has(detail::ParameterTraits<LoudnessMetadata>::tag) const {
-    return loudnessMetadata_ != boost::none;
-  }
-  bool AudioContent::has(detail::ParameterTraits<DialogueId>::tag) const {
-    return dialogueId_ != boost::none;
-  }
-  bool AudioContent::has(detail::ParameterTraits<ContentKind>::tag) const {
-    return nonDialogueContentKind_ != boost::none ||
-           dialogueContentKind_ != boost::none ||
-           mixedContentKind_ != boost::none;
-  }
-  bool AudioContent::has(
-      detail::ParameterTraits<NonDialogueContentKind>::tag) const {
-    return nonDialogueContentKind_ != boost::none;
-  }
-  bool AudioContent::has(
-      detail::ParameterTraits<DialogueContentKind>::tag) const {
-    return dialogueContentKind_ != boost::none;
-  }
-  bool AudioContent::has(detail::ParameterTraits<MixedContentKind>::tag) const {
-    return mixedContentKind_ != boost::none;
+  bool AudioContent::has(DispatchTag<ContentKind>) const {
+    return storage_.has<NonDialogueContentKind>() ||
+           storage_.has<DialogueContentKind>() ||
+           storage_.has<MixedContentKind>();
   }
 
   // ---- Setter ---- //
   void AudioContent::set(AudioContentId id) {
     if (isUndefined(id)) {
-      id_ = id;
+      storage_.set(id);
       return;
     }
     if (getParent().lock() != nullptr && getParent().lock()->lookup(id)) {
       throw std::runtime_error("id already in use");
     }
-    id_ = id;
+    storage_.set(id);
   }
-  void AudioContent::set(AudioContentName name) { name_ = name; }
-  void AudioContent::set(AudioContentLanguage language) {
-    language_ = language;
-  }
-  void AudioContent::set(LoudnessMetadata loudnessMetadata) {
-    loudnessMetadata_ = loudnessMetadata;
-  }
+
   void AudioContent::set(DialogueId id) {
-    if (dialogueId_ && dialogueId_.get() == id) {
+    if (storage_.has<DialogueId>() && storage_.get<DialogueId>() == id) {
       return;
     }
     unset<DialogueId>();
-    dialogueId_ = id;
+    storage_.set(id);
     if (id == Dialogue::NON_DIALOGUE) {
-      nonDialogueContentKind_ = NonDialogueContent::UNDEFINED;
+      storage_.set(NonDialogueContent::UNDEFINED);
     } else if (id == Dialogue::DIALOGUE) {
-      dialogueContentKind_ = DialogueContent::UNDEFINED;
+      storage_.set(DialogueContent::UNDEFINED);
     } else if (id == Dialogue::MIXED) {
-      mixedContentKind_ = MixedContent::UNDEFINED;
+      storage_.set(MixedContent::UNDEFINED);
     }
   }
   void AudioContent::set(ContentKind kind) {
@@ -130,41 +65,35 @@ namespace adm {
   }
   void AudioContent::set(NonDialogueContentKind kind) {
     unset<DialogueId>();
-    nonDialogueContentKind_ = kind;
-    dialogueId_ = Dialogue::NON_DIALOGUE;
+    storage_.set(kind);
+    storage_.set(Dialogue::NON_DIALOGUE);
   }
   void AudioContent::set(DialogueContentKind kind) {
     unset<DialogueId>();
-    dialogueContentKind_ = kind;
-    dialogueId_ = Dialogue::DIALOGUE;
+    storage_.set(kind);
+    storage_.set(Dialogue::DIALOGUE);
   }
   void AudioContent::set(MixedContentKind kind) {
     unset<DialogueId>();
-    mixedContentKind_ = kind;
-    dialogueId_ = Dialogue::MIXED;
+    storage_.set(kind);
+    storage_.set(Dialogue::MIXED);
   }
 
   // ---- Unsetter ---- //
-  void AudioContent::unset(detail::ParameterTraits<AudioContentLanguage>::tag) {
-    language_ = boost::none;
+
+  void AudioContent::unset(AudioContent::DispatchTag<DialogueId>) {
+    storage_.unset<DialogueId>();
+    storage_.unset<NonDialogueContentKind>();
+    storage_.unset<DialogueContentKind>();
+    storage_.unset<MixedContentKind>();
   }
-  void AudioContent::unset(detail::ParameterTraits<LoudnessMetadata>::tag) {
-    loudnessMetadata_ = boost::none;
-  }
-  void AudioContent::unset(detail::ParameterTraits<DialogueId>::tag) {
-    dialogueId_ = boost::none;
-    nonDialogueContentKind_ = boost::none;
-    dialogueContentKind_ = boost::none;
-    mixedContentKind_ = boost::none;
-  }
-  void AudioContent::unset(
-      detail::ParameterTraits<NonDialogueContentKind>::tag) {
+  void AudioContent::unset(AudioContent::DispatchTag<NonDialogueContentKind>) {
     unset<DialogueId>();
   }
-  void AudioContent::unset(detail::ParameterTraits<DialogueContentKind>::tag) {
+  void AudioContent::unset(AudioContent::DispatchTag<DialogueContentKind>) {
     unset<DialogueId>();
   }
-  void AudioContent::unset(detail::ParameterTraits<MixedContentKind>::tag) {
+  void AudioContent::unset(AudioContent::DispatchTag<MixedContentKind>) {
     unset<DialogueId>();
   }
 
@@ -241,6 +170,6 @@ namespace adm {
     return audioContentCopy;
   }
 
-  AudioContent::AudioContent(AudioContentName name) : name_(name) {}
+  AudioContent::AudioContent(AudioContentName name) { storage_.set(name); }
 
 }  // namespace adm

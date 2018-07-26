@@ -11,6 +11,7 @@
 #include "adm/elements_fwd.hpp"
 #include "adm/helper/element_range.hpp"
 #include "adm/detail/named_option_helper.hpp"
+#include "adm/detail/property_store.hpp"
 #include "adm/export.h"
 
 namespace adm {
@@ -30,12 +31,24 @@ namespace adm {
 
   /// @brief Tag for AudioContent
   struct AudioContentTag {};
+
+  struct AudioContentDefaults {
+    using PropertiesWithDefaults = PropertyList<>;
+  };
   /**
    * @brief Class representation of the audioContent ADM element
    *
    * @headerfile audio_content.hpp <adm/elements/audio_content.hpp>
    */
   class AudioContent : public std::enable_shared_from_this<AudioContent> {
+    using ManditoryProperties = PropertyList<AudioContentId, AudioContentName>;
+    using OptionalProperties =
+        PropertyList<AudioContentLanguage, DialogueId, NonDialogueContentKind,
+                     DialogueContentKind, MixedContentKind, LoudnessMetadata>;
+    using AudioContentPropertyStore =
+        PropertyStore<ManditoryProperties, OptionalProperties,
+                      AudioContentDefaults>;
+
    public:
     typedef AudioContentTag tag;
     /// Type that holds the id for this element;
@@ -95,14 +108,10 @@ namespace adm {
     template <typename Parameter>
     bool isDefault() const;
 
-    /// @brief AudioContentId setter
-    ADM_EXPORT void set(AudioContentId id);
-    /// @brief AudioContentName setter
-    ADM_EXPORT void set(AudioContentName name);
-    /// @brief AudioContentLanguage setter
-    ADM_EXPORT void set(AudioContentLanguage language);
-    /// @brief LoudnessMetadata setter
-    ADM_EXPORT void set(LoudnessMetadata loudnessMetadata);
+    template <typename Parameter>
+    void set(const Parameter &);
+
+    ADM_EXPORT void set(AudioContentId);
     ///@{
 
     /**
@@ -186,54 +195,34 @@ namespace adm {
     ADM_EXPORT std::weak_ptr<Document> getParent() const;
 
    private:
+    template <typename Type>
+    struct DispatchTag {
+      typedef Type T;
+    };
     friend class AudioContentAttorney;
 
     ADM_EXPORT AudioContent(AudioContentName name);
     ADM_EXPORT AudioContent(const AudioContent &) = default;
     ADM_EXPORT AudioContent(AudioContent &&) = default;
 
-    ADM_EXPORT AudioContentId
-        get(detail::ParameterTraits<AudioContentId>::tag) const;
-    ADM_EXPORT AudioContentName
-        get(detail::ParameterTraits<AudioContentName>::tag) const;
-    ADM_EXPORT AudioContentLanguage
-        get(detail::ParameterTraits<AudioContentLanguage>::tag) const;
-    ADM_EXPORT LoudnessMetadata
-        get(detail::ParameterTraits<LoudnessMetadata>::tag) const;
-    ADM_EXPORT DialogueId get(detail::ParameterTraits<DialogueId>::tag) const;
-    ADM_EXPORT ContentKind get(detail::ParameterTraits<ContentKind>::tag) const;
-    ADM_EXPORT NonDialogueContentKind
-        get(detail::ParameterTraits<NonDialogueContentKind>::tag) const;
-    ADM_EXPORT DialogueContentKind
-        get(detail::ParameterTraits<DialogueContentKind>::tag) const;
-    ADM_EXPORT MixedContentKind
-        get(detail::ParameterTraits<MixedContentKind>::tag) const;
+    template <typename Tag>
+    typename Tag::T get(Tag) const;
 
-    ADM_EXPORT bool has(detail::ParameterTraits<AudioContentId>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<AudioContentName>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioContentLanguage>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<LoudnessMetadata>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<DialogueId>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<ContentKind>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<NonDialogueContentKind>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<DialogueContentKind>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<MixedContentKind>::tag) const;
+    ADM_EXPORT ContentKind get(DispatchTag<ContentKind>) const;
 
     template <typename Tag>
-    bool isDefault(Tag) const {
-      return false;
-    }
+    bool has(Tag) const;
 
-    ADM_EXPORT void unset(detail::ParameterTraits<AudioContentLanguage>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<LoudnessMetadata>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<DialogueId>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<ContentKind>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<NonDialogueContentKind>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<DialogueContentKind>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<MixedContentKind>::tag);
+    ADM_EXPORT bool has(DispatchTag<ContentKind>) const;
+
+    template <typename Tag>
+    void unset(Tag);
+
+    ADM_EXPORT void unset(DispatchTag<DialogueId>);
+    ADM_EXPORT void unset(DispatchTag<ContentKind>);
+    ADM_EXPORT void unset(DispatchTag<NonDialogueContentKind>);
+    ADM_EXPORT void unset(DispatchTag<DialogueContentKind>);
+    ADM_EXPORT void unset(DispatchTag<MixedContentKind>);
 
     ADM_EXPORT ElementRange<const AudioObject> getReferences(
         detail::ParameterTraits<AudioObject>::tag) const;
@@ -248,15 +237,8 @@ namespace adm {
     void setParent(std::weak_ptr<Document> document);
 
     std::weak_ptr<Document> parent_;
-    AudioContentId id_;
-    AudioContentName name_;
-    boost::optional<AudioContentLanguage> language_;
     std::vector<std::shared_ptr<AudioObject>> audioObjects_;
-    boost::optional<LoudnessMetadata> loudnessMetadata_;
-    boost::optional<DialogueId> dialogueId_;
-    boost::optional<NonDialogueContentKind> nonDialogueContentKind_;
-    boost::optional<DialogueContentKind> dialogueContentKind_;
-    boost::optional<MixedContentKind> mixedContentKind_;
+    AudioContentPropertyStore storage_;
   };
 
   // ---- Implementation ---- //
@@ -273,26 +255,45 @@ namespace adm {
 
   template <typename Parameter>
   Parameter AudioContent::get() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return get(Tag());
+    return get(DispatchTag<Parameter>());
+  }
+
+  template <typename Tag>
+  typename Tag::T AudioContent::get(Tag) const {
+    typedef typename Tag::T Parameter;
+    return storage_.get<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioContent::has() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return has(Tag());
+    return has(DispatchTag<Parameter>());
+  }
+
+  template <typename Tag>
+  bool AudioContent::has(Tag) const {
+    typedef typename Tag::T Parameter;
+    return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioContent::isDefault() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return isDefault(Tag());
+    return storage_.isDefault<Parameter>();
+  }
+
+  template <typename Parameter>
+  void AudioContent::set(const Parameter &value) {
+    storage_.set(value);
   }
 
   template <typename Parameter>
   void AudioContent::unset() {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return unset(Tag());
+    return unset(DispatchTag<Parameter>());
+  }
+
+  template <typename Tag>
+  void AudioContent::unset(Tag) {
+    typedef typename Tag::T Parameter;
+    return storage_.unset<Parameter>();
   }
 
   template <typename Element>
