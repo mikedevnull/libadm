@@ -14,6 +14,7 @@
 #include "adm/helper/element_range.hpp"
 #include "adm/detail/named_option_helper.hpp"
 #include "adm/detail/named_type.hpp"
+#include "adm/detail/property_store.hpp"
 #include "adm/export.h"
 
 namespace adm {
@@ -35,12 +36,26 @@ namespace adm {
 
   /// @brief Tag for AudioObject
   struct AudioObjectTag {};
+
+  struct AudioObjectDefaults {
+    using PropertiesWithDefaults = PropertyList<Start>;
+    static Start create(Start::tag) { return Start{std::chrono::seconds(0)}; }
+  };
+
   /**
    * @brief Class representation of the audioObject ADM element
    *
    * @headerfile audio_object.hpp <adm/elements/audio_object.hpp>
    */
   class AudioObject : public std::enable_shared_from_this<AudioObject> {
+    using ManditoryProperties = PropertyList<AudioObjectId, AudioObjectName>;
+    using OptionalProperties =
+        PropertyList<Start, Duration, DialogueId, Importance, Interact,
+                     DisableDucking, AudioObjectInteraction>;
+    using AudioObjectPropertyStore =
+        PropertyStore<ManditoryProperties, OptionalProperties,
+                      AudioObjectDefaults>;
+
    public:
     typedef AudioObjectTag tag;
     /// Type that holds the id for this element;
@@ -95,24 +110,11 @@ namespace adm {
     template <typename Parameter>
     bool isDefault() const;
 
+    template <typename Parameter>
+    void set(const Parameter &);
+
     /// @brief AudioObjectId setter
     ADM_EXPORT void set(AudioObjectId id);
-    /// @brief AudioObjectName setter
-    ADM_EXPORT void set(AudioObjectName name);
-    /// @brief Start setter
-    ADM_EXPORT void set(Start start);
-    /// @brief Duration setter
-    ADM_EXPORT void set(Duration duration);
-    /// @brief DialogueId setter
-    ADM_EXPORT void set(DialogueId id);
-    /// @brief Importance setter
-    ADM_EXPORT void set(Importance importance);
-    /// @brief Interact setter
-    ADM_EXPORT void set(Interact interact);
-    /// @brief DisableDucking setter
-    ADM_EXPORT void set(DisableDucking disableDucking);
-    /// @brief AudioObjectInteraction setter
-    ADM_EXPORT void set(AudioObjectInteraction objectInteraction);
 
     /**
      * @brief ADM parameter unset template
@@ -194,46 +196,6 @@ namespace adm {
     ADM_EXPORT AudioObject(const AudioObject &) = default;
     ADM_EXPORT AudioObject(AudioObject &&) = default;
 
-    ADM_EXPORT AudioObjectId
-        get(detail::ParameterTraits<AudioObjectId>::tag) const;
-    ADM_EXPORT AudioObjectName
-        get(detail::ParameterTraits<AudioObjectName>::tag) const;
-    ADM_EXPORT Start get(detail::ParameterTraits<Start>::tag) const;
-    ADM_EXPORT Duration get(detail::ParameterTraits<Duration>::tag) const;
-    ADM_EXPORT DialogueId get(detail::ParameterTraits<DialogueId>::tag) const;
-    ADM_EXPORT Importance get(detail::ParameterTraits<Importance>::tag) const;
-    ADM_EXPORT Interact get(detail::ParameterTraits<Interact>::tag) const;
-    ADM_EXPORT DisableDucking
-        get(detail::ParameterTraits<DisableDucking>::tag) const;
-    ADM_EXPORT AudioObjectInteraction
-        get(detail::ParameterTraits<AudioObjectInteraction>::tag) const;
-
-    ADM_EXPORT bool has(detail::ParameterTraits<AudioObjectId>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<AudioObjectName>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<Start>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<Duration>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<DialogueId>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<Importance>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<Interact>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<DisableDucking>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioObjectInteraction>::tag) const;
-
-    template <typename Tag>
-    bool isDefault(Tag) const {
-      return false;
-    }
-
-    ADM_EXPORT bool isDefault(detail::ParameterTraits<Start>::tag) const;
-
-    ADM_EXPORT void unset(detail::ParameterTraits<Start>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<Duration>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<DialogueId>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<Importance>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<Interact>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<DisableDucking>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<AudioObjectInteraction>::tag);
-
     bool isAudioObjectReferenceCycle(
         std::shared_ptr<AudioObject> destinationObject);
     bool isComplementaryAudioObjectReferenceCycle(
@@ -264,19 +226,11 @@ namespace adm {
     ADM_EXPORT void setParent(std::weak_ptr<Document> document);
 
     std::weak_ptr<Document> parent_;
-    AudioObjectId id_;
-    AudioObjectName name_;
     std::vector<std::shared_ptr<AudioObject>> audioObjects_;
     std::vector<std::shared_ptr<AudioObject>> audioComplementaryObjects_;
     std::vector<std::shared_ptr<AudioPackFormat>> audioPackFormats_;
     std::vector<std::shared_ptr<AudioTrackUid>> audioTrackUids_;
-    boost::optional<Start> start_;
-    boost::optional<Duration> duration_;
-    boost::optional<DialogueId> dialogueId_;
-    boost::optional<Importance> importance_;
-    boost::optional<Interact> interact_;
-    boost::optional<DisableDucking> disableDucking_;
-    boost::optional<AudioObjectInteraction> audioObjectInteraction_;
+    AudioObjectPropertyStore storage_;
   };
 
   // ---- Implementation ---- //
@@ -293,26 +247,27 @@ namespace adm {
 
   template <typename Parameter>
   Parameter AudioObject::get() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return get(Tag());
+    return storage_.get<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioObject::has() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return has(Tag());
+    return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioObject::isDefault() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return isDefault(Tag());
+    return storage_.isDefault<Parameter>();
+  }
+
+  template <typename Parameter>
+  void AudioObject::set(const Parameter &value) {
+    storage_.set(value);
   }
 
   template <typename Parameter>
   void AudioObject::unset() {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return unset(Tag());
+    return storage_.unset<Parameter>();
   }
 
   template <typename Element>

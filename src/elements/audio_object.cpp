@@ -14,119 +14,17 @@ namespace adm {
   }  // namespace
 
   // ---- Getter ---- //
-  AudioObjectId AudioObject::get(
-      detail::ParameterTraits<AudioObjectId>::tag) const {
-    return id_;
-  }
-  AudioObjectName AudioObject::get(
-      detail::ParameterTraits<AudioObjectName>::tag) const {
-    return name_;
-  }
-  Start AudioObject::get(detail::ParameterTraits<Start>::tag) const {
-    return boost::get_optional_value_or(start_, startDefault);
-  }
-  Duration AudioObject::get(detail::ParameterTraits<Duration>::tag) const {
-    return duration_.get();
-  }
-  DialogueId AudioObject::get(detail::ParameterTraits<DialogueId>::tag) const {
-    return dialogueId_.get();
-  }
-  Importance AudioObject::get(detail::ParameterTraits<Importance>::tag) const {
-    return importance_.get();
-  }
-  Interact AudioObject::get(detail::ParameterTraits<Interact>::tag) const {
-    return interact_.get();
-  }
-  DisableDucking AudioObject::get(
-      detail::ParameterTraits<DisableDucking>::tag) const {
-    return disableDucking_.get();
-  }
-  AudioObjectInteraction AudioObject::get(
-      detail::ParameterTraits<AudioObjectInteraction>::tag) const {
-    return audioObjectInteraction_.get();
-  }
-
-  // ---- Has ---- //
-  bool AudioObject::has(detail::ParameterTraits<AudioObjectId>::tag) const {
-    return true;
-  }
-  bool AudioObject::has(detail::ParameterTraits<AudioObjectName>::tag) const {
-    return true;
-  }
-  bool AudioObject::has(detail::ParameterTraits<Start>::tag) const {
-    return true;
-  }
-  bool AudioObject::has(detail::ParameterTraits<Duration>::tag) const {
-    return duration_ != boost::none;
-  }
-  bool AudioObject::has(detail::ParameterTraits<DialogueId>::tag) const {
-    return dialogueId_ != boost::none;
-  }
-  bool AudioObject::has(detail::ParameterTraits<Importance>::tag) const {
-    return importance_ != boost::none;
-  }
-  bool AudioObject::has(detail::ParameterTraits<Interact>::tag) const {
-    return interact_ != boost::none;
-  }
-  bool AudioObject::has(detail::ParameterTraits<DisableDucking>::tag) const {
-    return disableDucking_ != boost::none;
-  }
-  bool AudioObject::has(
-      detail::ParameterTraits<AudioObjectInteraction>::tag) const {
-    return audioObjectInteraction_ != boost::none;
-  }
-
-  // ---- isDefault ---- //
-  bool AudioObject::isDefault(detail::ParameterTraits<Start>::tag) const {
-    return start_ == boost::none;
-  }
 
   // ---- Setter ---- //
   void AudioObject::set(AudioObjectId id) {
     if (isUndefined(id)) {
-      id_ = id;
+      storage_.set(id);
       return;
     }
     if (getParent().lock() != nullptr && getParent().lock()->lookup(id)) {
       throw std::runtime_error("id already in use");
     }
-    id_ = id;
-  }
-  void AudioObject::set(AudioObjectName name) { name_ = name; }
-  void AudioObject::set(Start start) { start_ = start; }
-  void AudioObject::set(Duration duration) { duration_ = duration; }
-  void AudioObject::set(DialogueId id) { dialogueId_ = id; }
-  void AudioObject::set(Importance importance) { importance_ = importance; }
-  void AudioObject::set(Interact interact) { interact_ = interact; }
-  void AudioObject::set(DisableDucking disableDucking) {
-    disableDucking_ = disableDucking;
-  }
-  void AudioObject::set(AudioObjectInteraction audioObjectInteraction) {
-    audioObjectInteraction_ = audioObjectInteraction;
-  }
-
-  // ---- Unsetter ---- //
-  void AudioObject::unset(detail::ParameterTraits<Start>::tag) {
-    start_ = boost::none;
-  }
-  void AudioObject::unset(detail::ParameterTraits<Duration>::tag) {
-    duration_ = boost::none;
-  }
-  void AudioObject::unset(detail::ParameterTraits<DialogueId>::tag) {
-    dialogueId_ = boost::none;
-  }
-  void AudioObject::unset(detail::ParameterTraits<Importance>::tag) {
-    importance_ = boost::none;
-  }
-  void AudioObject::unset(detail::ParameterTraits<Interact>::tag) {
-    interact_ = boost::none;
-  }
-  void AudioObject::unset(detail::ParameterTraits<DisableDucking>::tag) {
-    disableDucking_ = boost::none;
-  }
-  void AudioObject::unset(
-      detail::ParameterTraits<AudioObjectInteraction>::tag) {
-    audioObjectInteraction_ = boost::none;
+    storage_.set(id);
   }
 
   // ---- References ---- //
@@ -335,6 +233,6 @@ namespace adm {
     return audioObjectCopy;
   }
 
-  AudioObject::AudioObject(AudioObjectName name) : name_(name) {}
+  AudioObject::AudioObject(AudioObjectName name) { storage_.set(name); }
 
 }  // namespace adm
