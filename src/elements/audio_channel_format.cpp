@@ -14,39 +14,17 @@
 
 namespace adm {
 
-  // ---- Getter ---- //
-  AudioChannelFormatId AudioChannelFormat::get(
-      detail::ParameterTraits<AudioChannelFormatId>::tag) const {
-    return id_;
-  }
-  AudioChannelFormatName AudioChannelFormat::get(
-      detail::ParameterTraits<AudioChannelFormatName>::tag) const {
-    return name_;
-  }
-  TypeDescriptor AudioChannelFormat::get(
-      detail::ParameterTraits<TypeDescriptor>::tag) const {
-    return typeDescriptor_;
-  }
-  Frequency AudioChannelFormat::get(
-      detail::ParameterTraits<Frequency>::tag) const {
-    if (has<Frequency>()) {
-      return frequency_.get();
-    } else {
-      throw std::runtime_error("optional value for Frequency not set");
-    }
-  }
-
   // ---- Setter ---- //
-  void AudioChannelFormat::set(AudioChannelFormatId id) {
+  void AudioChannelFormat::set(const AudioChannelFormatId& id) {
     if (isUndefined(id)) {
-      id_ = id;
+      storage_.set(id);
       return;
     }
     if (getParent().lock() != nullptr && getParent().lock()->lookup(id)) {
       throw std::runtime_error("id already in use");
     }
     if (id.get<TypeDescriptor>() == get<TypeDescriptor>()) {
-      id_ = id;
+      storage_.set(id);
       assignNewIdValue<AudioBlockFormatDirectSpeakers>();
       assignNewIdValue<AudioBlockFormatMatrix>();
       assignNewIdValue<AudioBlockFormatObjects>();
@@ -60,30 +38,6 @@ namespace adm {
                   << formatTypeDefinition(id.get<TypeDescriptor>()) << ")";
       throw std::runtime_error(errorString.str());
     }
-  }
-  void AudioChannelFormat::set(AudioChannelFormatName name) { name_ = name; }
-  void AudioChannelFormat::set(Frequency frequency) { frequency_ = frequency; }
-
-  // ---- Has ---- //
-  bool AudioChannelFormat::has(
-      detail::ParameterTraits<AudioChannelFormatId>::tag) const {
-    return true;
-  }
-  bool AudioChannelFormat::has(
-      detail::ParameterTraits<AudioChannelFormatName>::tag) const {
-    return true;
-  }
-  bool AudioChannelFormat::has(
-      detail::ParameterTraits<TypeDescriptor>::tag) const {
-    return true;
-  }
-  bool AudioChannelFormat::has(detail::ParameterTraits<Frequency>::tag) const {
-    return frequency_ != boost::none;
-  }
-
-  // ---- Unsetter ---- //
-  void AudioChannelFormat::unset(detail::ParameterTraits<Frequency>::tag) {
-    frequency_ = boost::none;
   }
 
   // ---- AudioBlocks ---- //
@@ -221,7 +175,9 @@ namespace adm {
   }
 
   AudioChannelFormat::AudioChannelFormat(AudioChannelFormatName name,
-                                         TypeDescriptor channelType)
-      : name_(name), typeDescriptor_(channelType) {}
+                                         TypeDescriptor channelType) {
+    storage_.set(name);
+    storage_.set(channelType);
+  }
 
 }  // namespace adm

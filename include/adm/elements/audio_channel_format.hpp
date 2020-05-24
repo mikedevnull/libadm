@@ -17,6 +17,7 @@
 #include "adm/detail/named_option_helper.hpp"
 #include "adm/detail/named_type.hpp"
 #include "adm/detail/type_traits.hpp"
+#include "adm/detail/parameter_store.hpp"
 #include "adm/export.h"
 #include <type_traits>
 
@@ -58,6 +59,13 @@ namespace adm {
    */
   class AudioChannelFormat
       : public std::enable_shared_from_this<AudioChannelFormat> {
+    using ManditoryParameters =
+        ParameterList<AudioChannelFormatName, TypeDescriptor,
+                      AudioChannelFormatId>;
+    using OptionalParameters = ParameterList<Frequency>;
+    using AudioChannelFormatParameterStore =
+        detail::ParameterStore<ManditoryParameters, OptionalParameters>;
+
    public:
     typedef AudioChannelFormatTag tag;
     /// Type that holds the id for this element;
@@ -113,12 +121,12 @@ namespace adm {
     template <typename Parameter>
     bool isDefault() const;
 
+    /// @brief ADM parameter setter template
+    template <typename Parameter>
+    void set(const Parameter &);
+
     /// @brief AudioChannelFormatId setter
-    ADM_EXPORT void set(AudioChannelFormatId id);
-    /// @brief AudioChannelFormatName setter
-    ADM_EXPORT void set(AudioChannelFormatName name);
-    /// @brief Frequency setter
-    ADM_EXPORT void set(Frequency frequency);
+    ADM_EXPORT void set(const AudioChannelFormatId &id);
 
     /**
      * @brief ADM parameter unset template
@@ -189,28 +197,6 @@ namespace adm {
     ADM_EXPORT AudioChannelFormat(const AudioChannelFormat &) = default;
     ADM_EXPORT AudioChannelFormat(AudioChannelFormat &&) = default;
 
-    ADM_EXPORT AudioChannelFormatId
-        get(detail::ParameterTraits<AudioChannelFormatId>::tag) const;
-    ADM_EXPORT AudioChannelFormatName
-        get(detail::ParameterTraits<AudioChannelFormatName>::tag) const;
-    ADM_EXPORT TypeDescriptor
-        get(detail::ParameterTraits<TypeDescriptor>::tag) const;
-    ADM_EXPORT Frequency get(detail::ParameterTraits<Frequency>::tag) const;
-
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioChannelFormatId>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioChannelFormatName>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<TypeDescriptor>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<Frequency>::tag) const;
-
-    template <typename Tag>
-    bool isDefault(Tag) const {
-      return false;
-    }
-
-    ADM_EXPORT void unset(detail::ParameterTraits<Frequency>::tag);
-
     // ----- AudioBlockFormats ----- //
     ADM_EXPORT bool add(
         detail::ParameterTraits<AudioBlockFormatDirectSpeakers>::tag,
@@ -225,7 +211,8 @@ namespace adm {
                         const AudioBlockFormatBinaural &blockFormat);
 
     template <typename BlockFormat>
-    void assignId(BlockFormat &blockFormat, BlockFormat *previousBlock = nullptr);
+    void assignId(BlockFormat &blockFormat,
+                  BlockFormat *previousBlock = nullptr);
 
     template <typename BlockFormat>
     bool idUsed(const AudioBlockFormatId &id);
@@ -269,10 +256,7 @@ namespace adm {
     ADM_EXPORT void setParent(std::weak_ptr<Document> document);
 
     std::weak_ptr<Document> parent_;
-    AudioChannelFormatName name_;
-    TypeDescriptor typeDescriptor_;
-    AudioChannelFormatId id_;
-    boost::optional<Frequency> frequency_;
+    AudioChannelFormatParameterStore storage_;
 
     std::vector<AudioBlockFormatDirectSpeakers>
         audioBlockFormatsDirectSpeakers_;
@@ -297,26 +281,42 @@ namespace adm {
 
   template <typename Parameter>
   Parameter AudioChannelFormat::get() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return get(Tag());
+    static_assert(
+        AudioChannelFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioChannelFormat parameter");
+    return storage_.get<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioChannelFormat::has() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return has(Tag());
+    static_assert(
+        AudioChannelFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioChannelFormat parameter");
+    return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioChannelFormat::isDefault() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return isDefault(Tag());
+    static_assert(
+        AudioChannelFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioChannelFormat parameter");
+    return storage_.isDefault<Parameter>();
   }
 
   template <typename Parameter>
   void AudioChannelFormat::unset() {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return unset(Tag());
+    static_assert(
+        AudioChannelFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioChannelFormat parameter");
+    storage_.unset<Parameter>();
+  }
+
+  template <typename Parameter>
+  void AudioChannelFormat::set(const Parameter &v) {
+    static_assert(
+        AudioChannelFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioChannelFormat parameter");
+    storage_.set(v);
   }
 
   template <typename AudioBlockFormat>
