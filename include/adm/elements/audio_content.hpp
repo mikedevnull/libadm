@@ -32,9 +32,6 @@ namespace adm {
   /// @brief Tag for AudioContent
   struct AudioContentTag {};
 
-  struct AudioContentDefaults {
-    using ParametersWithDefaults = ParameterList<>;
-  };
   /**
    * @brief Class representation of the audioContent ADM element
    *
@@ -44,10 +41,9 @@ namespace adm {
     using ManditoryProperties = ParameterList<AudioContentId, AudioContentName>;
     using OptionalProperties =
         ParameterList<AudioContentLanguage, DialogueId, NonDialogueContentKind,
-                     DialogueContentKind, MixedContentKind, LoudnessMetadata>;
+                      DialogueContentKind, MixedContentKind, LoudnessMetadata>;
     using AudioContentPropertyStore =
-        detail::ParameterStore<ManditoryProperties, OptionalProperties,
-                      AudioContentDefaults>;
+        detail::ParameterStore<ManditoryProperties, OptionalProperties>;
 
    public:
     typedef AudioContentTag tag;

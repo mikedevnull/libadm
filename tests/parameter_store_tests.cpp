@@ -24,13 +24,13 @@ TEST_CASE("basic_store") {
   using Storage = detail::ParameterStore<Parameters, OptionalParameters>;
 
   Storage store;
-  static_assert(Storage::isParameterValue<Name>::value,
+  static_assert(store.isValidParameter<Name>(),
                 "Name should be a valid parameter");
-  static_assert(Storage::isParameterValue<NumericProperty>::value,
+  static_assert(store.isValidParameter<NumericProperty>(),
                 "NumericProperty should be a valid parameter");
-  static_assert(Storage::isParameterValue<FictionalScale>::value,
+  static_assert(store.isValidParameter<FictionalScale>(),
                 "FictionalScale should be a valid parameter");
-  static_assert(!Storage::isParameterValue<Unused>::value,
+  static_assert(!store.isValidParameter<Unused>(),
                 "Unused should not be a valid parameter");
   store.set(Name("MyName"));
 }
@@ -43,7 +43,7 @@ TEST_CASE("access_optional") {
   using Storage = detail::ParameterStore<Parameters, OptionalParameters>;
 
   Storage store;
-  static_assert(Storage::isParameterValue<FictionalScale>::value,
+  static_assert(store.isValidParameter<FictionalScale>(),
                 "FictionalScale should be a valid parameter");
 
   REQUIRE(store.has<FictionalScale>() == false);
@@ -56,8 +56,7 @@ TEST_CASE("access_optional") {
   REQUIRE(store.has<FictionalScale>() == false);
 }
 
-struct SomeDefaultValues {
-  using ParametersWithDefaults = adm::meta::mp_list<Name>;
+struct SomeDefaultValueCreator {
   static Name create(Name::tag) { return Name("mynameis"); }
 };
 
@@ -65,18 +64,23 @@ TEST_CASE("default_values") {
   using namespace adm;
 
   using Parameters = meta::mp_list<NumericProperty>;
-  using OptionalParameters = meta::mp_list<Name, FictionalScale>;
+  using OptionalParameters = meta::mp_list<FictionalScale>;
+  using ParametersWithDefaults = adm::meta::mp_list<Name>;
   using Storage =
-      detail::ParameterStore<Parameters, OptionalParameters, SomeDefaultValues>;
+      detail::ParameterStore<Parameters, OptionalParameters,
+                             ParametersWithDefaults, SomeDefaultValueCreator>;
 
   Storage store;
 
   REQUIRE(store.has<Name>() == true);
   REQUIRE(store.get<Name>() == Name("mynameis"));
+  REQUIRE(store.isDefault<Name>() == true);
   store.set(Name("it's my name"));
   REQUIRE(store.has<Name>() == true);
+  REQUIRE(store.isDefault<Name>() == false);
   REQUIRE(store.get<Name>() == Name("it's my name"));
   store.unset<Name>();
   REQUIRE(store.has<Name>() == true);
+  REQUIRE(store.isDefault<Name>() == true);
   REQUIRE(store.get<Name>() == Name("mynameis"));
 }

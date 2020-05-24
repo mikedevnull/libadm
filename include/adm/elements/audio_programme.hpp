@@ -42,7 +42,6 @@ namespace adm {
                                             detail::RangeValidator<-62, 0>>;
 
   struct AudioProgrammeDefaults {
-    using ParametersWithDefaults = ParameterList<Start>;
     static Start create(Start::tag) { return Start{std::chrono::seconds(0)}; }
   };
 
@@ -60,11 +59,12 @@ namespace adm {
     using ManditoryProperties =
         ParameterList<AudioProgrammeId, AudioProgrammeName>;
     using OptionalProperties =
-        ParameterList<AudioProgrammeLanguage, Start, End, MaxDuckingDepth,
+        ParameterList<AudioProgrammeLanguage, End, MaxDuckingDepth,
                       LoudnessMetadata, AudioProgrammeReferenceScreen>;
+    using ParametersWithDefaults = ParameterList<Start>;
     using AudioProgrammeParameterStore =
         detail::ParameterStore<ManditoryProperties, OptionalProperties,
-                               AudioProgrammeDefaults>;
+                               ParametersWithDefaults, AudioProgrammeDefaults>;
 
    public:
     typedef AudioProgrammeTag tag;

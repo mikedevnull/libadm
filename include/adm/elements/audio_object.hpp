@@ -38,7 +38,6 @@ namespace adm {
   struct AudioObjectTag {};
 
   struct AudioObjectDefaults {
-    using ParametersWithDefaults = ParameterList<Start>;
     static Start create(Start::tag) { return Start{std::chrono::seconds(0)}; }
   };
 
@@ -50,11 +49,12 @@ namespace adm {
   class AudioObject : public std::enable_shared_from_this<AudioObject> {
     using ManditoryParameters = ParameterList<AudioObjectId, AudioObjectName>;
     using OptionalParameters =
-        ParameterList<Start, Duration, DialogueId, Importance, Interact,
-                     DisableDucking, AudioObjectInteraction>;
+        ParameterList<Duration, DialogueId, Importance, Interact,
+                      DisableDucking, AudioObjectInteraction>;
+    using ParametersWithDefaults = ParameterList<Start>;
     using AudioObjectParameterStore =
         detail::ParameterStore<ManditoryParameters, OptionalParameters,
-                      AudioObjectDefaults>;
+                               ParametersWithDefaults, AudioObjectDefaults>;
 
    public:
     typedef AudioObjectTag tag;
