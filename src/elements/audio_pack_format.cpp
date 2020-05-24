@@ -9,40 +9,17 @@
 
 namespace adm {
 
-  // ---- Getter ---- //
-  AudioPackFormatId AudioPackFormat::get(
-      detail::ParameterTraits<AudioPackFormatId>::tag) const {
-    return id_;
-  }
-  AudioPackFormatName AudioPackFormat::get(
-      detail::ParameterTraits<AudioPackFormatName>::tag) const {
-    return name_;
-  }
-  TypeDescriptor AudioPackFormat::get(
-      detail::ParameterTraits<TypeDescriptor>::tag) const {
-    return typeDescriptor_;
-  }
-
-  Importance AudioPackFormat::get(
-      detail::ParameterTraits<Importance>::tag) const {
-    return importance_.get();
-  }
-  AbsoluteDistance AudioPackFormat::get(
-      detail::ParameterTraits<AbsoluteDistance>::tag) const {
-    return absoluteDistance_.get();
-  }
-
   // ---- Setter ---- //
   void AudioPackFormat::set(AudioPackFormatId id) {
     if (isUndefined(id)) {
-      id_ = id;
+      storage_.set(id);
       return;
     }
     if (getParent().lock() != nullptr && getParent().lock()->lookup(id)) {
       throw std::runtime_error("id already in use");
     }
     if (id.get<TypeDescriptor>() == get<TypeDescriptor>()) {
-      id_ = id;
+      storage_.set(id);
     } else {
       std::stringstream errorString;
       errorString << "missmatch between TypeDefinition of AudioPackFormat ("
@@ -51,40 +28,6 @@ namespace adm {
                   << formatTypeDefinition(id.get<TypeDescriptor>()) << ")";
       throw std::runtime_error(errorString.str());
     }
-  }
-  void AudioPackFormat::set(AudioPackFormatName name) { name_ = name; }
-  void AudioPackFormat::set(Importance importance) { importance_ = importance; }
-  void AudioPackFormat::set(AbsoluteDistance absoluteDistance) {
-    absoluteDistance_ = absoluteDistance;
-  }
-
-  // ---- Has ---- //
-  bool AudioPackFormat::has(
-      detail::ParameterTraits<AudioPackFormatId>::tag) const {
-    return true;
-  }
-  bool AudioPackFormat::has(
-      detail::ParameterTraits<AudioPackFormatName>::tag) const {
-    return true;
-  }
-  bool AudioPackFormat::has(
-      detail::ParameterTraits<TypeDescriptor>::tag) const {
-    return true;
-  }
-  bool AudioPackFormat::has(detail::ParameterTraits<Importance>::tag) const {
-    return importance_ != boost::none;
-  }
-  bool AudioPackFormat::has(
-      detail::ParameterTraits<AbsoluteDistance>::tag) const {
-    return absoluteDistance_ != boost::none;
-  }
-
-  // ---- Unsetter ---- //
-  void AudioPackFormat::unset(detail::ParameterTraits<Importance>::tag) {
-    importance_ = boost::none;
-  }
-  void AudioPackFormat::unset(detail::ParameterTraits<AbsoluteDistance>::tag) {
-    absoluteDistance_ = boost::none;
   }
 
   // ---- References ---- //
@@ -206,9 +149,9 @@ namespace adm {
   }
 
   AudioPackFormat::AudioPackFormat(AudioPackFormatName name,
-                                   TypeDescriptor channelType)
-      : name_(name), typeDescriptor_(channelType) {
+                                   TypeDescriptor channelType) {
+    storage_.set(name);
+    storage_.set(channelType);
   }
-
 
 }  // namespace adm

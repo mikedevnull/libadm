@@ -12,67 +12,17 @@ namespace adm {
   namespace {
     const Normalization normalizationDefault{"SN3D"};
     const NfcRefDist nfcRefDistDefault{0};
-    const ScreenRef screenRefDefualt{false};
+    const ScreenRef screenRefDefault{false};
   }  // namespace
 
-  // ---- Getter ---- //
-  ScreenRef AudioPackFormatHoa::get(
-      detail::ParameterTraits<ScreenRef>::tag) const {
-    return boost::get_optional_value_or(screenRef_, screenRefDefualt);
+  Normalization AudioPackFormatHoaDefaults::create(Normalization::tag) {
+    return normalizationDefault;
   }
-  Normalization AudioPackFormatHoa::get(
-      detail::ParameterTraits<Normalization>::tag) const {
-    return boost::get_optional_value_or(normalization_, normalizationDefault);
+  NfcRefDist AudioPackFormatHoaDefaults::create(NfcRefDist::tag) {
+    return nfcRefDistDefault;
   }
-  NfcRefDist AudioPackFormatHoa::get(
-      detail::ParameterTraits<NfcRefDist>::tag) const {
-    return boost::get_optional_value_or(nfcRefDist_, nfcRefDistDefault);
-  }
-
-  // ---- isDefault ---- //
-  bool AudioPackFormatHoa::isDefault(
-      detail::ParameterTraits<ScreenRef>::tag) const {
-    return screenRef_ == boost::none;
-  }
-  bool AudioPackFormatHoa::isDefault(
-      detail::ParameterTraits<Normalization>::tag) const {
-    return normalization_ == boost::none;
-  }
-  bool AudioPackFormatHoa::isDefault(
-      detail::ParameterTraits<NfcRefDist>::tag) const {
-    return nfcRefDist_ == boost::none;
-  }
-
-  // ---- Setter ---- //
-  void AudioPackFormatHoa::set(ScreenRef screenRef) { screenRef_ = screenRef; }
-  void AudioPackFormatHoa::set(Normalization normalization) {
-    normalization_ = normalization;
-  }
-  void AudioPackFormatHoa::set(NfcRefDist nfcRefDist) {
-    nfcRefDist_ = nfcRefDist;
-  }
-
-  // ---- Has ---- //
-  bool AudioPackFormatHoa::has(detail::ParameterTraits<ScreenRef>::tag) const {
-    return screenRef_ != boost::none;
-  }
-  bool AudioPackFormatHoa::has(
-      detail::ParameterTraits<Normalization>::tag) const {
-    return normalization_ != boost::none;
-  }
-  bool AudioPackFormatHoa::has(detail::ParameterTraits<NfcRefDist>::tag) const {
-    return nfcRefDist_ != boost::none;
-  }
-
-  // ---- Unsetter ---- //
-  void AudioPackFormatHoa::unset(detail::ParameterTraits<ScreenRef>::tag) {
-    screenRef_ = boost::none;
-  }
-  void AudioPackFormatHoa::unset(detail::ParameterTraits<Normalization>::tag) {
-    normalization_ = boost::none;
-  }
-  void AudioPackFormatHoa::unset(detail::ParameterTraits<NfcRefDist>::tag) {
-    nfcRefDist_ = boost::none;
+  ScreenRef AudioPackFormatHoaDefaults::create(ScreenRef::tag) {
+    return screenRefDefault;
   }
 
   // ---- Common ---- //

@@ -10,6 +10,7 @@
 #include "adm/helper/element_range.hpp"
 #include "adm/detail/named_option_helper.hpp"
 #include "adm/detail/named_type.hpp"
+#include "adm/detail/parameter_store.hpp"
 #include "adm/export.h"
 
 namespace adm {
@@ -35,6 +36,12 @@ namespace adm {
    * <adm/elements/audio_pack_format.hpp>
    */
   class AudioPackFormat : public std::enable_shared_from_this<AudioPackFormat> {
+    using ManditoryParameters =
+        ParameterList<AudioPackFormatId, AudioPackFormatName, TypeDescriptor>;
+    using OptionalParameters = ParameterList<Importance, AbsoluteDistance>;
+    using AudioPackFormatParameterStore =
+        detail::ParameterStore<ManditoryParameters, OptionalParameters>;
+
    public:
     typedef AudioPackFormatTag tag;
     /// Type that holds the id for this element;
@@ -91,14 +98,12 @@ namespace adm {
     template <typename Parameter>
     bool isDefault() const;
 
+    /// @brief ADM parameter setter template
+    template <typename Parameter>
+    void set(const Parameter &value);
+
     /// @brief AudioPackFormatId setter
     ADM_EXPORT void set(AudioPackFormatId id);
-    /// @brief AudioPackFormatName setter
-    ADM_EXPORT void set(AudioPackFormatName name);
-    /// @brief Importance setter
-    ADM_EXPORT void set(Importance importance);
-    /// @brief AbsoluteDistance setter
-    ADM_EXPORT void set(AbsoluteDistance distance);
 
     /**
      * @brief ADM parameter unset template
@@ -169,31 +174,6 @@ namespace adm {
     ADM_EXPORT AudioPackFormat(const AudioPackFormat &) = default;
     ADM_EXPORT AudioPackFormat(AudioPackFormat &&) = default;
 
-    ADM_EXPORT AudioPackFormatId
-        get(detail::ParameterTraits<AudioPackFormatId>::tag) const;
-    ADM_EXPORT AudioPackFormatName
-        get(detail::ParameterTraits<AudioPackFormatName>::tag) const;
-    ADM_EXPORT TypeDescriptor
-        get(detail::ParameterTraits<TypeDescriptor>::tag) const;
-    ADM_EXPORT Importance get(detail::ParameterTraits<Importance>::tag) const;
-    ADM_EXPORT AbsoluteDistance
-        get(detail::ParameterTraits<AbsoluteDistance>::tag) const;
-
-    ADM_EXPORT bool has(detail::ParameterTraits<AudioPackFormatId>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioPackFormatName>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<TypeDescriptor>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<Importance>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<AbsoluteDistance>::tag) const;
-
-    template <typename Tag>
-    bool isDefault(Tag) const {
-      return false;
-    }
-
-    ADM_EXPORT void unset(detail::ParameterTraits<Importance>::tag);
-    ADM_EXPORT void unset(detail::ParameterTraits<AbsoluteDistance>::tag);
-
     bool isAudioPackFormatReferenceCycle(
         std::shared_ptr<AudioPackFormat> destinationPackFormat);
 
@@ -218,11 +198,7 @@ namespace adm {
 
    private:
     std::weak_ptr<Document> parent_;
-    AudioPackFormatName name_;
-    AudioPackFormatId id_;
-    TypeDescriptor typeDescriptor_;
-    boost::optional<Importance> importance_;
-    boost::optional<AbsoluteDistance> absoluteDistance_;
+    AudioPackFormatParameterStore storage_;
     std::vector<std::shared_ptr<AudioChannelFormat>> audioChannelFormats_;
     std::vector<std::shared_ptr<AudioPackFormat>> audioPackFormats_;
   };
@@ -235,9 +211,9 @@ namespace adm {
       Parameters... optionalNamedArgs) {
     if (channelType == adm::TypeDefinition::HOA) {
       throw std::invalid_argument(
-          "For AudioPackFormat of type HOA use AudioPackFormatHoa::create() instead.");
+          "For AudioPackFormat of type HOA use AudioPackFormatHoa::create() "
+          "instead.");
     } else {
-
       std::shared_ptr<AudioPackFormat> pack(
           new AudioPackFormat(name, channelType));
       detail::setNamedOptionHelper(
@@ -248,26 +224,42 @@ namespace adm {
 
   template <typename Parameter>
   Parameter AudioPackFormat::get() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return get(Tag());
+    static_assert(
+        AudioPackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioPackFormat parameter");
+    return storage_.get<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioPackFormat::has() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return has(Tag());
+    static_assert(
+        AudioPackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioPackFormat parameter");
+    return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioPackFormat::isDefault() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return isDefault(Tag());
+    static_assert(
+        AudioPackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioPackFormat parameter");
+    return storage_.isDefault<Parameter>();
+  }
+
+  template <typename Parameter>
+  void AudioPackFormat::set(const Parameter &value) {
+    static_assert(
+        AudioPackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioPackFormat parameter");
+    storage_.set(value);
   }
 
   template <typename Parameter>
   void AudioPackFormat::unset() {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return unset(Tag());
+    static_assert(
+        AudioPackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioPackFormat parameter");
+    storage_.unset<Parameter>();
   }
 
   template <typename Element>
