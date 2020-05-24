@@ -3,7 +3,7 @@
 #include <boost/version.hpp>
 
 /**
- * @file irt/adm/meta/meta.hpp
+ * @file irt/adm/meta/list.hpp
  *
  * This header is a small wrapper for boost::mp11 metaprogramming library,
  * which is only available in relatively new boost version (1.66).
