@@ -8,46 +8,18 @@
 
 namespace adm {
 
-  // ---- Getter ---- //
-  AudioTrackFormatId AudioTrackFormat::get(
-      detail::ParameterTraits<AudioTrackFormatId>::tag) const {
-    return id_;
-  }
-  AudioTrackFormatName AudioTrackFormat::get(
-      detail::ParameterTraits<AudioTrackFormatName>::tag) const {
-    return name_;
-  }
-  FormatDescriptor AudioTrackFormat::get(
-      detail::ParameterTraits<FormatDescriptor>::tag) const {
-    return format_;
-  }
-
   // ---- Setter ---- //
   void AudioTrackFormat::set(AudioTrackFormatId id) {
     if (isUndefined(id)) {
-      id_ = id;
+      storage_.set(id);
       return;
     }
     if (getParent().lock() != nullptr && getParent().lock()->lookup(id)) {
       throw std::runtime_error("id already in use");
     }
-    id_ = id;
+    storage_.set(id);
   }
-  void AudioTrackFormat::set(AudioTrackFormatName name) { name_ = name; }
-
-  // ---- Has ---- //
-  bool AudioTrackFormat::has(
-      detail::ParameterTraits<AudioTrackFormatId>::tag) const {
-    return true;
-  }
-  bool AudioTrackFormat::has(
-      detail::ParameterTraits<AudioTrackFormatName>::tag) const {
-    return true;
-  }
-  bool AudioTrackFormat::has(
-      detail::ParameterTraits<FormatDescriptor>::tag) const {
-    return true;
-  }
+  void AudioTrackFormat::set(AudioTrackFormatName name) { storage_.set(name); }
 
   // ---- References ---- //
   void AudioTrackFormat::setReference(
@@ -132,9 +104,9 @@ namespace adm {
   }
 
   AudioTrackFormat::AudioTrackFormat(AudioTrackFormatName name,
-                                     FormatDescriptor format)
-      : name_(name),
-        id_(AudioTrackFormatId(TypeDefinition::UNDEFINED)),
-        format_(format) {}
-
+                                     FormatDescriptor format) {
+    storage_.set(name);
+    storage_.set(AudioTrackFormatId(TypeDefinition::UNDEFINED));
+    storage_.set(format);
+  }
 }  // namespace adm

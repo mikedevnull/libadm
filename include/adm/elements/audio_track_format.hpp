@@ -30,6 +30,12 @@ namespace adm {
    */
   class AudioTrackFormat
       : public std::enable_shared_from_this<AudioTrackFormat> {
+    using ManditoryParameters =
+        ParameterList<AudioTrackFormatName, AudioTrackFormatId,
+                      FormatDescriptor>;
+    using AudioTrackFormatParameterStore =
+        detail::ParameterStore<ManditoryParameters, NoParameters>;
+
    public:
     typedef AudioTrackFormatTag tag;
     /// Type that holds the id for this element;
@@ -220,9 +226,7 @@ namespace adm {
     ADM_EXPORT void setParent(std::weak_ptr<Document> document);
 
     std::weak_ptr<Document> parent_;
-    AudioTrackFormatName name_;
-    AudioTrackFormatId id_;
-    FormatDescriptor format_;
+    AudioTrackFormatParameterStore storage_;
     std::shared_ptr<AudioStreamFormat> audioStreamFormat_;
   };
 
@@ -241,26 +245,34 @@ namespace adm {
   }
   template <typename Parameter>
   Parameter AudioTrackFormat::get() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return get(Tag());
+    static_assert(
+        AudioTrackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioTrackFormat parameter");
+    return storage_.get<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioTrackFormat::has() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return has(Tag());
+    static_assert(
+        AudioTrackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioTrackFormat parameter");
+    return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioTrackFormat::isDefault() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return isDefault(Tag());
+    static_assert(
+        AudioTrackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioTrackFormat parameter");
+    return storage_.isDefault<Parameter>();
   }
 
   template <typename Parameter>
   void AudioTrackFormat::unset() {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return unset(Tag());
+    static_assert(
+        AudioTrackFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioTrackFormat parameter");
+    return storage_.unset<Parameter>();
   }
 
   template <typename Element>
