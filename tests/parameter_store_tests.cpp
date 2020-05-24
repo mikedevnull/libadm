@@ -24,13 +24,13 @@ TEST_CASE("basic_store") {
   using Storage = detail::ParameterStore<Parameters, OptionalParameters>;
 
   Storage store;
-  static_assert(store.isValidParameter<Name>(),
+  static_assert(Storage::isValidParameter<Name>::value,
                 "Name should be a valid parameter");
-  static_assert(store.isValidParameter<NumericProperty>(),
+  static_assert(Storage::isValidParameter<NumericProperty>::value,
                 "NumericProperty should be a valid parameter");
-  static_assert(store.isValidParameter<FictionalScale>(),
+  static_assert(Storage::isValidParameter<FictionalScale>::value,
                 "FictionalScale should be a valid parameter");
-  static_assert(!store.isValidParameter<Unused>(),
+  static_assert(!Storage::isValidParameter<Unused>::value,
                 "Unused should not be a valid parameter");
   store.set(Name("MyName"));
 }
@@ -43,7 +43,7 @@ TEST_CASE("access_optional") {
   using Storage = detail::ParameterStore<Parameters, OptionalParameters>;
 
   Storage store;
-  static_assert(store.isValidParameter<FictionalScale>(),
+  static_assert(Storage::isValidParameter<FictionalScale>::value,
                 "FictionalScale should be a valid parameter");
 
   REQUIRE(store.has<FictionalScale>() == false);

@@ -62,18 +62,13 @@ namespace adm {
 
      public:
       /**
-       * @brief Check if a parameter is one of the parameters of this store
+       * @brief Check parameter is one of the parameters of this store
        *
-       * Returns true if the parameter is either one of the manditory or
-       optional parameters.
-       *
-       * This method can be evaluated at compile time and thus be used as
-       expression in a `static_assert`.
+       * Evaluates to a true integral_type if the parameter is either one of the
+       manditory or optional parameters.
        */
       template <typename Parameter>
-      constexpr bool isValidParameter() const {
-        return meta::mp_contains<Parameters, Parameter>::value;
-      }
+      using isValidParameter = meta::mp_contains<Parameters, Parameter>;
 
       /**
        * @brief Check if the given parameter is currently set to its default
