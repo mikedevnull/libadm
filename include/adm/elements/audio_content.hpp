@@ -38,12 +38,12 @@ namespace adm {
    * @headerfile audio_content.hpp <adm/elements/audio_content.hpp>
    */
   class AudioContent : public std::enable_shared_from_this<AudioContent> {
-    using ManditoryProperties = ParameterList<AudioContentId, AudioContentName>;
-    using OptionalProperties =
+    using ManditoryParameters = ParameterList<AudioContentId, AudioContentName>;
+    using OptionalParameters =
         ParameterList<AudioContentLanguage, DialogueId, NonDialogueContentKind,
                       DialogueContentKind, MixedContentKind, LoudnessMetadata>;
     using AudioContentPropertyStore =
-        detail::ParameterStore<ManditoryProperties, OptionalProperties>;
+        detail::ParameterStore<ManditoryParameters, OptionalParameters>;
 
    public:
     typedef AudioContentTag tag;
@@ -257,6 +257,8 @@ namespace adm {
   template <typename Tag>
   typename Tag::T AudioContent::get(Tag) const {
     typedef typename Tag::T Parameter;
+    static_assert(AudioContentPropertyStore::isValidParameter<Parameter>::value,
+                  "Not a valid AudioContent parameter");
     return storage_.get<Parameter>();
   }
 
@@ -268,16 +270,22 @@ namespace adm {
   template <typename Tag>
   bool AudioContent::has(Tag) const {
     typedef typename Tag::T Parameter;
+    static_assert(AudioContentPropertyStore::isValidParameter<Parameter>::value,
+                  "Not a valid AudioContent parameter");
     return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioContent::isDefault() const {
+    static_assert(AudioContentPropertyStore::isValidParameter<Parameter>::value,
+                  "Not a valid AudioContent parameter");
     return storage_.isDefault<Parameter>();
   }
 
   template <typename Parameter>
   void AudioContent::set(const Parameter &value) {
+    static_assert(AudioContentPropertyStore::isValidParameter<Parameter>::value,
+                  "Not a valid AudioContent parameter");
     storage_.set(value);
   }
 
@@ -289,6 +297,8 @@ namespace adm {
   template <typename Tag>
   void AudioContent::unset(Tag) {
     typedef typename Tag::T Parameter;
+    static_assert(AudioContentPropertyStore::isValidParameter<Parameter>::value,
+                  "Not a valid AudioContent parameter");
     return storage_.unset<Parameter>();
   }
 

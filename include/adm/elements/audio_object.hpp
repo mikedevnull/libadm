@@ -247,26 +247,36 @@ namespace adm {
 
   template <typename Parameter>
   Parameter AudioObject::get() const {
+    static_assert(AudioObjectParameterStore::isValidParameter<Parameter>(),
+                  "Not a valid AudioObject parameter");
     return storage_.get<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioObject::has() const {
+    static_assert(AudioObjectParameterStore::isValidParameter<Parameter>(),
+                  "Not a valid AudioObject parameter");
     return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioObject::isDefault() const {
+    static_assert(AudioObjectParameterStore::isValidParameter<Parameter>(),
+                  "Not a valid AudioObject parameter");
     return storage_.isDefault<Parameter>();
   }
 
   template <typename Parameter>
   void AudioObject::set(const Parameter &value) {
+    static_assert(AudioObjectParameterStore::isValidParameter<Parameter>(),
+                  "Not a valid AudioObject parameter");
     storage_.set(value);
   }
 
   template <typename Parameter>
   void AudioObject::unset() {
+    static_assert(AudioObjectParameterStore::isValidParameter<Parameter>(),
+                  "Not a valid AudioObject parameter");
     return storage_.unset<Parameter>();
   }
 

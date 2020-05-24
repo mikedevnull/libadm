@@ -56,14 +56,14 @@ namespace adm {
    * @headerfile audio_programme.hpp <adm/elements/audio_programme.hpp>
    */
   class AudioProgramme : public std::enable_shared_from_this<AudioProgramme> {
-    using ManditoryProperties =
+    using ManditoryParameters =
         ParameterList<AudioProgrammeId, AudioProgrammeName>;
-    using OptionalProperties =
+    using OptionalParameters =
         ParameterList<AudioProgrammeLanguage, End, MaxDuckingDepth,
                       LoudnessMetadata, AudioProgrammeReferenceScreen>;
     using ParametersWithDefaults = ParameterList<Start>;
     using AudioProgrammeParameterStore =
-        detail::ParameterStore<ManditoryProperties, OptionalProperties,
+        detail::ParameterStore<ManditoryParameters, OptionalParameters,
                                ParametersWithDefaults, AudioProgrammeDefaults>;
 
    public:
@@ -102,6 +102,9 @@ namespace adm {
      */
     template <typename Parameter>
     Parameter get() const {
+      static_assert(
+          AudioProgrammeParameterStore::isValidParameter<Parameter>::value,
+          "Not a valid AudioProgramme parameter");
       return storage_.get<Parameter>();
     }
 
@@ -113,6 +116,9 @@ namespace adm {
      */
     template <typename Parameter>
     bool has() const {
+      static_assert(
+          AudioProgrammeParameterStore::isValidParameter<Parameter>::value,
+          "Not a valid AudioProgramme parameter");
       return storage_.has<Parameter>();
     }
 
@@ -124,11 +130,17 @@ namespace adm {
      */
     template <typename Parameter>
     bool isDefault() const {
+      static_assert(
+          AudioProgrammeParameterStore::isValidParameter<Parameter>::value,
+          "Not a valid AudioProgramme parameter");
       return storage_.isDefault<Parameter>();
     }
 
     template <typename Parameter>
     void set(const Parameter &value) {
+      static_assert(
+          AudioProgrammeParameterStore::isValidParameter<Parameter>::value,
+          "Not a valid AudioProgramme parameter");
       storage_.set(value);
     }
 
@@ -143,6 +155,9 @@ namespace adm {
      */
     template <typename Parameter>
     void unset() {
+      static_assert(
+          AudioProgrammeParameterStore::isValidParameter<Parameter>::value,
+          "Not a valid AudioProgramme parameter");
       storage_.unset<Parameter>();
     }
 
