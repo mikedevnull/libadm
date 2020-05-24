@@ -7,45 +7,19 @@
 
 namespace adm {
 
-  // ---- Getter ---- //
-  AudioStreamFormatId AudioStreamFormat::get(
-      detail::ParameterTraits<AudioStreamFormatId>::tag) const {
-    return id_;
-  }
-  AudioStreamFormatName AudioStreamFormat::get(
-      detail::ParameterTraits<AudioStreamFormatName>::tag) const {
-    return name_;
-  }
-  FormatDescriptor AudioStreamFormat::get(
-      detail::ParameterTraits<FormatDescriptor>::tag) const {
-    return format_;
-  }
-
   // ---- Setter ---- //
   void AudioStreamFormat::set(AudioStreamFormatId id) {
     if (isUndefined(id)) {
-      id_ = id;
+      storage_.set(id);
       return;
     }
     if (getParent().lock() != nullptr && getParent().lock()->lookup(id)) {
       throw std::runtime_error("id already in use");
     }
-    id_ = id;
+    storage_.set(id);
   }
-  void AudioStreamFormat::set(AudioStreamFormatName name) { name_ = name; }
-
-  // ---- Has ---- //
-  bool AudioStreamFormat::has(
-      detail::ParameterTraits<AudioStreamFormatId>::tag) const {
-    return true;
-  }
-  bool AudioStreamFormat::has(
-      detail::ParameterTraits<AudioStreamFormatName>::tag) const {
-    return true;
-  }
-  bool AudioStreamFormat::has(
-      detail::ParameterTraits<FormatDescriptor>::tag) const {
-    return true;
+  void AudioStreamFormat::set(AudioStreamFormatName name) {
+    storage_.set(name);
   }
 
   // ---- References ---- //
@@ -200,9 +174,10 @@ namespace adm {
   }
 
   AudioStreamFormat::AudioStreamFormat(AudioStreamFormatName name,
-                                       FormatDescriptor format)
-      : name_(name),
-        id_(AudioStreamFormatId(TypeDefinition::UNDEFINED)),
-        format_(format) {}
+                                       FormatDescriptor format) {
+    storage_.set(name);
+    storage_.set(AudioStreamFormatId(TypeDefinition::UNDEFINED));
+    storage_.set(format);
+  }
 
 }  // namespace adm

@@ -57,6 +57,12 @@ namespace adm {
    */
   class AudioStreamFormat
       : public std::enable_shared_from_this<AudioStreamFormat> {
+    using ManditoryParameters =
+        ParameterList<AudioStreamFormatName, AudioStreamFormatId,
+                      FormatDescriptor>;
+    using AudioStreamFormatParameterStore =
+        detail::ParameterStore<ManditoryParameters, NoParameters>;
+
    public:
     typedef AudioStreamFormatTag tag;
     /// Type that holds the id for this element;
@@ -263,24 +269,6 @@ namespace adm {
     ADM_EXPORT AudioStreamFormat(const AudioStreamFormat &) = default;
     ADM_EXPORT AudioStreamFormat(AudioStreamFormat &&) = default;
 
-    ADM_EXPORT AudioStreamFormatId
-        get(detail::ParameterTraits<AudioStreamFormatId>::tag) const;
-    ADM_EXPORT AudioStreamFormatName
-        get(detail::ParameterTraits<AudioStreamFormatName>::tag) const;
-    ADM_EXPORT FormatDescriptor
-        get(detail::ParameterTraits<FormatDescriptor>::tag) const;
-
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioStreamFormatId>::tag) const;
-    ADM_EXPORT bool has(
-        detail::ParameterTraits<AudioStreamFormatName>::tag) const;
-    ADM_EXPORT bool has(detail::ParameterTraits<FormatDescriptor>::tag) const;
-
-    template <typename Tag>
-    bool isDefault(Tag) const {
-      return false;
-    }
-
     ADM_EXPORT std::shared_ptr<AudioChannelFormat> getReference(
         detail::ParameterTraits<AudioChannelFormat>::tag);
     ADM_EXPORT std::shared_ptr<AudioPackFormat> getReference(
@@ -303,9 +291,7 @@ namespace adm {
     ADM_EXPORT void setParent(std::weak_ptr<Document> document);
 
     std::weak_ptr<Document> parent_;
-    AudioStreamFormatName name_;
-    AudioStreamFormatId id_;
-    FormatDescriptor format_;
+    AudioStreamFormatParameterStore storage_;
 
     std::shared_ptr<AudioChannelFormat> audioChannelFormat_;
     std::shared_ptr<AudioPackFormat> audioPackFormat_;
@@ -328,26 +314,34 @@ namespace adm {
 
   template <typename Parameter>
   Parameter AudioStreamFormat::get() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return get(Tag());
+    static_assert(
+        AudioStreamFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioStreamFormat parameter");
+    return storage_.get<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioStreamFormat::has() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return has(Tag());
+    static_assert(
+        AudioStreamFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioStreamFormat parameter");
+    return storage_.has<Parameter>();
   }
 
   template <typename Parameter>
   bool AudioStreamFormat::isDefault() const {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return isDefault(Tag());
+    static_assert(
+        AudioStreamFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioStreamFormat parameter");
+    return storage_.isDefault<Parameter>();
   }
 
   template <typename Parameter>
   void AudioStreamFormat::unset() {
-    typedef typename detail::ParameterTraits<Parameter>::tag Tag;
-    return unset(Tag());
+    static_assert(
+        AudioStreamFormatParameterStore::isValidParameter<Parameter>::value,
+        "Not a valid AudioStreamFormat parameter");
+    return storage_.unset<Parameter>();
   }
 
   template <typename Element>
