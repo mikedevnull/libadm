@@ -13,7 +13,7 @@
 #include "adm/helper/element_range.hpp"
 #include "adm/detail/named_option_helper.hpp"
 #include "adm/detail/named_type.hpp"
-#include "adm/detail/property_store.hpp"
+#include "adm/detail/parameter_store.hpp"
 #include "adm/export.h"
 
 namespace adm {
@@ -42,7 +42,7 @@ namespace adm {
                                             detail::RangeValidator<-62, 0>>;
 
   struct AudioProgrammeDefaults {
-    using PropertiesWithDefaults = PropertyList<Start>;
+    using ParametersWithDefaults = ParameterList<Start>;
     static Start create(Start::tag) { return Start{std::chrono::seconds(0)}; }
   };
 
@@ -58,13 +58,13 @@ namespace adm {
    */
   class AudioProgramme : public std::enable_shared_from_this<AudioProgramme> {
     using ManditoryProperties =
-        PropertyList<AudioProgrammeId, AudioProgrammeName>;
+        ParameterList<AudioProgrammeId, AudioProgrammeName>;
     using OptionalProperties =
-        PropertyList<AudioProgrammeLanguage, Start, End, MaxDuckingDepth,
-                     LoudnessMetadata, AudioProgrammeReferenceScreen>;
-    using AudioProgrammePropertyStore =
-        PropertyStore<ManditoryProperties, OptionalProperties,
-                      AudioProgrammeDefaults>;
+        ParameterList<AudioProgrammeLanguage, Start, End, MaxDuckingDepth,
+                      LoudnessMetadata, AudioProgrammeReferenceScreen>;
+    using AudioProgrammeParameterStore =
+        detail::ParameterStore<ManditoryProperties, OptionalProperties,
+                               AudioProgrammeDefaults>;
 
    public:
     typedef AudioProgrammeTag tag;
@@ -211,7 +211,7 @@ namespace adm {
 
     std::weak_ptr<Document> parent_;
 
-    AudioProgrammePropertyStore storage_;
+    AudioProgrammeParameterStore storage_;
     std::vector<std::shared_ptr<AudioContent>> audioContents_;
   };
   ///@}

@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include "adm/detail/property_store.hpp"
+#include "adm/detail/parameter_store.hpp"
 #include "adm/detail/named_type.hpp"
 #include "adm/meta/list.hpp"
 #include <boost/optional.hpp>
@@ -19,9 +19,9 @@ using Unused = adm::detail::NamedType<int, UnusedTag>;
 TEST_CASE("basic_store") {
   using namespace adm;
 
-  using Properties = meta::mp_list<Name, NumericProperty>;
-  using OptionalProperties = meta::mp_list<FictionalScale>;
-  using Storage = PropertyStore<Properties, OptionalProperties>;
+  using Parameters = ParameterList<Name, NumericProperty>;
+  using OptionalParameters = ParameterList<FictionalScale>;
+  using Storage = detail::ParameterStore<Parameters, OptionalParameters>;
 
   Storage store;
   static_assert(Storage::isParameterValue<Name>::value,
@@ -38,9 +38,9 @@ TEST_CASE("basic_store") {
 TEST_CASE("access_optional") {
   using namespace adm;
 
-  using Properties = meta::mp_list<Name, NumericProperty>;
-  using OptionalProperties = meta::mp_list<FictionalScale>;
-  using Storage = PropertyStore<Properties, OptionalProperties>;
+  using Parameters = meta::mp_list<Name, NumericProperty>;
+  using OptionalParameters = meta::mp_list<FictionalScale>;
+  using Storage = detail::ParameterStore<Parameters, OptionalParameters>;
 
   Storage store;
   static_assert(Storage::isParameterValue<FictionalScale>::value,
@@ -57,17 +57,17 @@ TEST_CASE("access_optional") {
 }
 
 struct SomeDefaultValues {
-  using PropertiesWithDefaults = adm::meta::mp_list<Name>;
+  using ParametersWithDefaults = adm::meta::mp_list<Name>;
   static Name create(Name::tag) { return Name("mynameis"); }
 };
 
 TEST_CASE("default_values") {
   using namespace adm;
 
-  using Properties = meta::mp_list<NumericProperty>;
-  using OptionalProperties = meta::mp_list<Name, FictionalScale>;
+  using Parameters = meta::mp_list<NumericProperty>;
+  using OptionalParameters = meta::mp_list<Name, FictionalScale>;
   using Storage =
-      PropertyStore<Properties, OptionalProperties, SomeDefaultValues>;
+      detail::ParameterStore<Parameters, OptionalParameters, SomeDefaultValues>;
 
   Storage store;
 

@@ -14,7 +14,7 @@
 #include "adm/helper/element_range.hpp"
 #include "adm/detail/named_option_helper.hpp"
 #include "adm/detail/named_type.hpp"
-#include "adm/detail/property_store.hpp"
+#include "adm/detail/parameter_store.hpp"
 #include "adm/export.h"
 
 namespace adm {
@@ -38,7 +38,7 @@ namespace adm {
   struct AudioObjectTag {};
 
   struct AudioObjectDefaults {
-    using PropertiesWithDefaults = PropertyList<Start>;
+    using ParametersWithDefaults = ParameterList<Start>;
     static Start create(Start::tag) { return Start{std::chrono::seconds(0)}; }
   };
 
@@ -48,12 +48,12 @@ namespace adm {
    * @headerfile audio_object.hpp <adm/elements/audio_object.hpp>
    */
   class AudioObject : public std::enable_shared_from_this<AudioObject> {
-    using ManditoryProperties = PropertyList<AudioObjectId, AudioObjectName>;
-    using OptionalProperties =
-        PropertyList<Start, Duration, DialogueId, Importance, Interact,
+    using ManditoryParameters = ParameterList<AudioObjectId, AudioObjectName>;
+    using OptionalParameters =
+        ParameterList<Start, Duration, DialogueId, Importance, Interact,
                      DisableDucking, AudioObjectInteraction>;
-    using AudioObjectPropertyStore =
-        PropertyStore<ManditoryProperties, OptionalProperties,
+    using AudioObjectParameterStore =
+        detail::ParameterStore<ManditoryParameters, OptionalParameters,
                       AudioObjectDefaults>;
 
    public:
@@ -230,7 +230,7 @@ namespace adm {
     std::vector<std::shared_ptr<AudioObject>> audioComplementaryObjects_;
     std::vector<std::shared_ptr<AudioPackFormat>> audioPackFormats_;
     std::vector<std::shared_ptr<AudioTrackUid>> audioTrackUids_;
-    AudioObjectPropertyStore storage_;
+    AudioObjectParameterStore storage_;
   };
 
   // ---- Implementation ---- //

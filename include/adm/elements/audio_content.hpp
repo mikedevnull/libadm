@@ -11,7 +11,7 @@
 #include "adm/elements_fwd.hpp"
 #include "adm/helper/element_range.hpp"
 #include "adm/detail/named_option_helper.hpp"
-#include "adm/detail/property_store.hpp"
+#include "adm/detail/parameter_store.hpp"
 #include "adm/export.h"
 
 namespace adm {
@@ -33,7 +33,7 @@ namespace adm {
   struct AudioContentTag {};
 
   struct AudioContentDefaults {
-    using PropertiesWithDefaults = PropertyList<>;
+    using ParametersWithDefaults = ParameterList<>;
   };
   /**
    * @brief Class representation of the audioContent ADM element
@@ -41,12 +41,12 @@ namespace adm {
    * @headerfile audio_content.hpp <adm/elements/audio_content.hpp>
    */
   class AudioContent : public std::enable_shared_from_this<AudioContent> {
-    using ManditoryProperties = PropertyList<AudioContentId, AudioContentName>;
+    using ManditoryProperties = ParameterList<AudioContentId, AudioContentName>;
     using OptionalProperties =
-        PropertyList<AudioContentLanguage, DialogueId, NonDialogueContentKind,
+        ParameterList<AudioContentLanguage, DialogueId, NonDialogueContentKind,
                      DialogueContentKind, MixedContentKind, LoudnessMetadata>;
     using AudioContentPropertyStore =
-        PropertyStore<ManditoryProperties, OptionalProperties,
+        detail::ParameterStore<ManditoryProperties, OptionalProperties,
                       AudioContentDefaults>;
 
    public:
